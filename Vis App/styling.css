@@ -1,0 +1,11 @@
+.bar rect {
+    fill: #4682b4;
+    transition: fill 0.2s;
+}
+.bar rect:hover {
+    fill: #ef476f;
+}
+.axis-label {
+    font-family: sans-serif;
+    font-size: 12px;
+}
