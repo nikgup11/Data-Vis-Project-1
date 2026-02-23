@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Global Indicators Dashboard</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <link rel="stylesheet" href="styling.css">
+    <style>
+        /* Dashboard Layout Styling */
+        body { 
+            font-family: sans-serif; 
+            margin: 0; 
+            padding: 15px 25px; 
+            background-color: #f0f2f5;
+            height: 100vh;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Compact Header */
+        .header { text-align: center; margin-bottom: 10px; }
+        .header h1 { margin: 0; font-size: 22px; color: #333; }
+        .header p { margin: 4px 0 0 0; font-size: 13px; color: #414fce; font-weight: bold; }
+        
+        /* Compact Controls at Top*/
+        .controls { 
+            text-align: center; 
+            background: #fff; 
+            padding: 10px; 
+            border-radius: 8px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            margin-bottom: 15px;
+            font-size: 14px;
+        }
+        .controls select, .controls input { margin: 0 10px; padding: 4px; }
+        .controls p { margin: 8px 0 0 0; font-size: 13px; color: #555; }
+
+        /* 2x2 Grid for All Charts */
+        .dashboard-container { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            grid-template-rows: 1fr 1fr; 
+            gap: 15px; 
+            flex-grow: 1; /* Takes up all remaining vertical space */
+            min-height: 500px; 
+        }
+
+        /* 1x2 Grid for displaying single attribute */
+        .dashboard-container.single-mode {
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr; /* Only one row */
+        }
+        /* Show map and scatter only */
+        .single-mode #map-container, .single-mode #chart-x { grid-row: 1 / 2; }
+        .single-mode #scatter-plot, .single-mode #chart-y { display: none; }
+
+        /* Chart Boxes */
+        .chart-box { 
+            background: #fff; 
+            border-radius: 8px; 
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Prevents overflow pushing grid limits */
+            padding: 10px;
+        }
+
+        .bar { fill: steelblue; }
+        .axis-label { font-size: 12px; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <!-- Page Title -->
+    <div class="header">
+        <h1>Global Economic & Environmental Visualization Dashboard</h1>
+        <p>Author: Nikhil Gupta</p>
+    </div>
+    
+    <div class="controls">
+        <label for="year-input"><strong>Year:</strong></label>
+        <input type="number" id="year-input" style="width: 70px; margin-right: 20px;">
+        <!-- X and Y Drop Down Selection -->
+        <label for="x-data-select">Primary (X-Axis):</label>
+        <select name="x_data_attr" id="x-data-select">
+            <option value="">--Choose option--</option>
+            <option value="co2" selected>CO2 Emissions per Capita</option>
+            <option value="gdp">GDP per Capita</option>
+            <option value="rn_energy">Renewable Energy per Capita</option>
+        </select>
+        
+        <label for="y-data-select">Comparison (Y-Axis):</label>
+        <select name="y_data_attr" id="y-data-select">
+            <option value="">--None (Single View)--</option>
+            <option value="co2">CO2 Emissions per Capita</option>
+            <option value="gdp" selected>GDP per Capita</option>
+            <option value="rn_energy">Renewable Energy per Capita</option>
+        </select>
+        
+        <p>Mode: <span id="selected-attr" style="font-weight:bold;">Awaiting Input...</span></p>
+    </div>
+    <!-- Organize dashboard -->
+    <div class="dashboard-container" id="dash-grid">
+        <div class="chart-box" id="map-container"></div>
+        <div class="chart-box" id="scatter-plot"></div>
+        <div class="chart-box" id="chart-x"></div>
+        <div class="chart-box" id="chart-y"></div>
+    </div>
+
+    <script src="vis.js"></script>
+</body>
+</html>
