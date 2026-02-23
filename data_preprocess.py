@@ -1,33 +1,44 @@
 import pandas as pd
 
-# Load the datasets
-temp_df = pd.read_csv("C:/Users/nikhi/School Work/Data Visualization/projects/Project 1/average-monthly-surface-temperature.filtered/average-monthly-surface-temperature.csv")
-ph_df = pd.read_csv("C:/Users/nikhi/School Work/Data Visualization/projects/Project 1/seawater-ph/seawater-ph.csv")
+# 1. Load all three datasets
+co2_df = pd.read_csv('owid-co2-data.csv')
+gdp_df = pd.read_csv('gdp-per-capita-worldbank.csv')
+renew_df = pd.read_csv('renewable-energy-data.csv')
 
-# Inspect the first few rows and info for the temperature dataset
-print("--- Temperature Dataset ---")
-print(temp_df.head())
-print(temp_df.info())
-print(temp_df['Entity'].unique())
+# 2. Standardize CO2 dataset columns
+co2_df_cleaned = co2_df.rename(columns={
+    'country': 'Entity',
+    'year': 'Year',
+    'iso_code': 'Code'
+})
+co2_subset = co2_df_cleaned[['Entity', 'Year', 'Code', 'co2_per_capita']]
 
-# Inspect the first few rows and info for the pH dataset
-print("\n--- Seawater pH Dataset ---")
-print(ph_df.head())
-print(ph_df.info())
-print(ph_df['Entity'].unique())
+# 3. Standardize Renewable Energy dataset columns
+renew_df_cleaned = renew_df.rename(columns={
+    'country': 'Entity',
+    'year': 'Year',
+    'iso_code': 'Code'
+})
+# Extract the relevant renewable energy attributes for the project
+renew_subset = renew_df_cleaned[['Entity', 'Year', 'Code', 'renewables_energy_per_capita', 'renewables_share_energy']]
 
-# 1. Load and Format
-temp_df['Day'] = pd.to_datetime(temp_df['Day'])
-ph_df['Day'] = pd.to_datetime(ph_df['Day'])
+# --- MERGE 1: CO2 Emissions + Renewable Energy ---
+merged_co2_renew = pd.merge(co2_subset, renew_subset, on=['Entity', 'Year', 'Code'], how='inner')
+# Clean out rows missing either metric
+merged_co2_renew = merged_co2_renew.dropna(subset=['co2_per_capita', 'renewables_energy_per_capita'])
+merged_co2_renew.to_csv('merged_co2_renewable.csv', index=False)
+print(f"Created merged_co2_renewable.csv with {len(merged_co2_renew)} rows.")
 
-# 2. Aggregate pH to monthly mean
-ph_monthly = ph_df.groupby(ph_df['Day'].dt.to_period('M'))['Monthly average'].mean().reset_index()
-ph_monthly.columns = ['YearMonth', 'Seawater_pH']
+# --- MERGE 2: GDP per capita + Renewable Energy ---
+merged_gdp_renew = pd.merge(gdp_df, renew_subset, on=['Entity', 'Year', 'Code'], how='inner')
+# Clean out rows missing either metric
+merged_gdp_renew = merged_gdp_renew.dropna(subset=['GDP per capita', 'renewables_energy_per_capita'])
+merged_gdp_renew.to_csv('merged_gdp_renewable.csv', index=False)
+print(f"Created merged_gdp_renewable.csv with {len(merged_gdp_renew)} rows.")
 
-# 3. Format Temperature
-temp_df['YearMonth'] = temp_df['Day'].dt.to_period('M')
-temp_subset = temp_df[['YearMonth', 'Monthly average']].rename(columns={'Monthly average': 'Surface_Temp_C'})
-
-# 4. Merge
-combined_df = pd.merge(temp_subset, ph_monthly, on='YearMonth', how='inner')
-combined_df.to_csv('C:/Users/nikhi/School Work/Data Visualization/projects/Project 1/working_us_ocean_data.csv')
+# --- MERGE 3: ALL 3 INDICATORS ---
+# Merging the already combined CO2/Renewable df with the GDP df
+merged_all = pd.merge(merged_co2_renew, gdp_df, on=['Entity', 'Year', 'Code'], how='inner')
+merged_all = merged_all.dropna(subset=['co2_per_capita', 'renewables_energy_per_capita', 'GDP per capita'])
+merged_all.to_csv('merged_all_indicators.csv', index=False)
+print(f"Created merged_all_indicators.csv with {len(merged_all)} rows.")
